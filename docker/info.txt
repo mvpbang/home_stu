@@ -1,0 +1,8 @@
+devops 自动化运维
+CI     持续集成
+architect 架构师
+
+docker  --pass层 2014起步，2015大爆发
+  Doing the old thing the new way! 变革
+特点：
+  容器、虚拟化、轻量级、可移植、分布式
