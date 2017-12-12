@@ -1,0 +1,209 @@
+#redhat--fedora--centos
+#RHCE/RHCA    RHCSA--RHCE--RHCA
+Security: Network Services（安全：网络服务）
+Deployment, Virtualization, and Systems Management（部署和系统管理员）
+Directory Services and Authentication（目录服务和认证）
+Clustering and Storage Management（存储管理）
+System Monitoring and Performance Tuning（系统监控和性能调整）
+
+#kernel  tree  https://www.kernel.org/pub/linux/kernel/
+drivers：驱动代码
+fs：文件系统的代码
+include ：包含文件，这个文件利用其他模块重建内核
+init：初始化代码，内核工作的起点  //这里面有内核初始化程序main.c，是内核完成所有初始化工作并进入正常运行的关键
+ipc：进程间通信的相关代码
+kernel：主内核的代码 //最重要的是进程调度函数schedule()、sleep_on()函数和有关的系统调用程序
+mm：内存管理的代码
+net：网络管理的代码
+
+#内核的5大模块
+进程调度
+内存管理
+文件系统
+进程通信
+网络接口
+
+#EPEL
+EPEL即Extra Packages for Enterprise Linux，为CentOS提供了额外的10000多个软件包，而且在不替换系统组件方面下了很多功夫，
+yum install epel-release
+
+#开发环境
+yum install -y gcc gcc-c++ make cmake autoconf automake
+
+yum install git     # 版本控制
+yum install git-svn # git的svn插件
+
+#stat 文件状态  file
+access_time
+当你访问这个文件的时候，访问时间戳会变
+modify_time
+当你修改这个文件内容的时候，这个时间戳是会变的
+change_time
+当你修改了文件的权限和状态，这个时间戳是会发生改变的
+
+#dmesg内核信息
+dmesg | head -10
+
+#tcp连接情况
+netstat -n | awk '/^tcp/ {++S[$NF]} END {for(a in S) print a, S[a]}'
+
+#仅仅下载依赖包  yum install -y yum-download
+yum install -y --downloadonly --downloaddir=/tmp/zab3.4/  zabbix-server-mysql
+
+mysql时间格式化
+select * from table_name where date_format(xxxx,'%Y%m%d')= '20080227'（匹配“年月日”)
+select * from uic_account where date_format(create_time,'%Y%m%d')> '200171019'
+
+#oracle时间格式化
+select to_char(sysdate,'YYYY-MM-DD')   from dual;
+select to_date('20170928','YYYY-MM-DD') from dual;
+
+ldd是list, dynamic, dependencies的缩写，列出动态库依赖关系
+ldd /bin/ls 显示当前这个命令运行时所需要的库文件
+dmesg 查看本机的设备信息
+ldconfig
+
+#多行展示
+cat <<EOF
+are you ok
+EOF
+
+#多行输出，不支持变量的读取
+cat <<EOF  >/tmp/0.log
+are you ok
+EOF
+
+linux下如何添加路由
+route 命令方法：
+主机路由：
+/sbin/route add -host 192.168.2.13 dev eth2
+/sbin/route add -host 202.81.11.91 dev lo
+
+缺省网关路由：
+/sbin/route add default gw 192.168.1.254
+/sbin/route add default gw 202.11.11.1
+
+网络路由 去往某一网络：
+/sbin/route add -net 192.168.100.0 netmask 255.255.255.0 dev eth0 //通过eth0设备去连接
+/sbin/route add -net 10.8.0.0  netmask 255.255.255.0 gw 192.168.1.90
+/sbin/route add -net 0.0.0.0  netmask 0.0.0.0 gw 203.84.12.1
+查看：
+route -n
+删除：
+route del
+ip route 命令方法：
+增加路由，主要是本机可以沟通的网段
+ip route add 192.168.5.0 dev eth0
+增加可以通往外部的路由，需通过router
+ip route add 192.168.10.0/24 via 192.168.5.100 dev eth0
+增加默认路由
+ip route add default via 192.168.1.2 dev eth0
+查看：
+ip route show
+删除：
+ip route del 192.168.10.0/24
+
+
+#高效率删除文件
+rsync --delete-before -d /tmp/www.111cn.net/ /the/folder/you/want/delete/
+
+#Linux优化非root账户限制，永久有效
+vim /etc/security/limits.conf
+# 添加如下的行
+* soft nofile 65535
+* hard nofile 65535
+
+#* 代表针对所有用户
+#noproc 是代表最大进程数
+#nofile 是代表最大文件打开数
+
+#提取域名，按数量排序
+http://www.etiantian.org/index.html
+http://www.etiantian.org/1.html
+http://post.etiantian.org/index.html
+http://mp3.etiantian.org/index.html
+http://www.etiantian.org/3.html
+http://post.etiantian.org/2.html
+
+awk -F "/" '{print $3}' ino.log |sort|uniq -c
+#sort排序，uniq唯一
+
+bc内置计算机
+obase  输出进制2~16   obase=2
+scale  小数点保留位数 scale=3
+
+[root@dzswj ~]# a=`echo "scale=2; 1/3" |bc`
+[root@dzswj ~]# echo $a
+.33
+[root@dzswj ~]# a=`echo "obase=2; 8" |bc`
+[root@dzswj ~]# echo $a
+1000
+
+zcat 读取压缩文件的内容.将内容显示在屏幕上
+zcat xxx.gz
+
+释放内存
+sync    0 1 2 3
+echo 3 > /proc/sys/vm/drop_caches &&　echo 0 >/proc/sys/vm/drop_caches
+
+grep -E == egrep 支持正则、元字符匹配
+grep xxx  file     #默认采用部分匹配
+grep -x xxxx file  #完全匹配
+grep -w xxx file == grep \<xxx\> file 匹配单词
+grep -v xxx file   #反向搜索，显示不匹配的
+grep -r/-R         #递归目录搜索
+grep -A | -B | -C xxx file  #匹配多
+
+#grep与egrep不同  egrep完全支持正则
+ls |grep -i '[a-z]\{3\}' ===  ls |egrep -i '[a-z]{3}'
+
+egrep 'NW|EA' testfile
+#打印所有包含NW或EA的行。如果不是使用egrep，而是grep，将不会有结果查出
+
+grep  'NW\|EA' testfile
+#对于标准grep，如果在扩展元字符前面加\，grep会自动启用扩展选项-E
+
+linux终端（）
+console  控制台
+tty      服务器端虚拟终端
+ttys     串口
+pts/n    远程虚拟终端
+
+#kill tty1
+ps -t tty1
+kill pid
+
+pts/2
+skill -9 pts/2
+
+#信号杀掉进程
+[root@dzswj ~]# kill -l
+ 1) SIGHUP	 2) SIGINT	 3) SIGQUIT	 4) SIGILL	 5) SIGTRAP
+ 6) SIGABRT	 7) SIGBUS	 8) SIGFPE	 9) SIGKILL	10) SIGUSR1
+11) SIGSEGV	12) SIGUSR2	13) SIGPIPE	14) SIGALRM	15) SIGTERM
+16) SIGSTKFLT	17) SIGCHLD	18) SIGCONT	19) SIGSTOP	20) SIGTSTP
+21) SIGTTIN	22) SIGTTOU	23) SIGURG	24) SIGXCPU	25) SIGXFSZ
+26) SIGVTALRM	27) SIGPROF	28) SIGWINCH	29) SIGIO	30) SIGPWR
+31) SIGSYS	34) SIGRTMIN	35) SIGRTMIN+1	36) SIGRTMIN+2	37) SIGRTMIN+3
+38) SIGRTMIN+4	39) SIGRTMIN+5	40) SIGRTMIN+6	41) SIGRTMIN+7	42) SIGRTMIN+8
+43) SIGRTMIN+9	44) SIGRTMIN+10	45) SIGRTMIN+11	46) SIGRTMIN+12	47) SIGRTMIN+13
+48) SIGRTMIN+14	49) SIGRTMIN+15	50) SIGRTMAX-14	51) SIGRTMAX-13	52) SIGRTMAX-12
+53) SIGRTMAX-11	54) SIGRTMAX-10	55) SIGRTMAX-9	56) SIGRTMAX-8	57) SIGRTMAX-7
+58) SIGRTMAX-6	59) SIGRTMAX-5	60) SIGRTMAX-4	61) SIGRTMAX-3	62) SIGRTMAX-2
+63) SIGRTMAX-1	64) SIGRTMAX
+#常见信号说明
+SIGHUP  (1)
+SIGINT  (2)
+SIGQUIT (3)
+SIGKILL (9)  立即强制杀掉进程，不能现场清理对线程关闭等操作（清理操作）
+SIGTERM (15) 会通知线程，关闭并清理工作
+
+
+kill -s 信号名  进程号
+kill   -信号名  进程号
+kill pid   # kill -SIGTERM pid
+kill -l  列出支持的信号操作
+kill -l 信号名   #返回对应信号的数字好
+kill -9 pid
+kill -s SIGTERM  PID   #根据信号量处理
+kill -s SIGTERM  PID

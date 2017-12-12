@@ -1,0 +1,121 @@
+find详解
+#对文件过滤
+find /tmp/ -name 'galeki*'
+find ./ -name '*.zip' -a  -size 546k
+
+#time  +n(>n)   -n(<n)   =n(=n) 天
+-atime n	上一次读取或者执行时间在n*24小时前以内的文件
+-ctime n	上一次状态改变在n*24小时前以内的文件
+-mtime n	上一次修改时间在n*24小时前以内的文件
+-newer fie	比file所指的文件还要新的文件
+#n分钟以内
+-mmin n 文件最后一次修改是在n分钟之内
+-amin n
+-cmin n
+
+
+#size
+-size n[bkMG]	大小为n（b为比特，k为KB，M为MB，G为GB）的文件
+
+#user
+-user name	所有者用户名称是name的文件
+-perm 	按照权限来搜索
+-group nae	所有者用户组群名称是name的文件
+-o  -not  -and	或者，反向，并列
+
+#对过滤的结果处理
+-print	打印出找出文件的完整地址，一个文件一行
+-delete	删除找出的文件
+-exec command {};	对每一个找到的文件执行command命令，并用文件替换"{}"，;是固定的结束符
+- ok  命令名称 {} 对符合条件的文件执行所给的Linux 命令，与exec不同的是，它会询问用户是否需要执行该命令
+
+find /tmp/ -ctime +7 -delete　　　　　　#删除/tmp目录下一周以前创建的文件
+find ./ -name '*.unk' -exec file {} \;#找出当前文件夹下后缀是unk的文件file命令显示每个文件的文件类型
+
+#1. 用文件名查找文件
+find . -name "MyCProgram.c" #支持通配符   find . -name 'My*'
+./backup/MyCProgram.c
+./MyCProgram.c
+
+#2.用文件名查找文件，忽略大小写
+find . -iname "MyCProgram.c"
+
+#3. 使用mindepth和maxdepth限定搜索指定目录的深度
+find / -name passwd
+#精准查询  updatedb && locate passwd 基于索引查询
+find / -maxdepth 2 -name passwd  #限定查询的深度
+find / -mindepth 3 -maxdepth 5 -name passwd  #限定查询的区间
+
+#4. 在find命令查找到的文件上执行命令
+find / -iname "MyCProgram.c" -exec md5sum {} \;
+find / -iname "mycprogram.c" | xargs -n1 md5sum;
+
+#5. 相反匹配
+#-a == -and  -o == -or   -not == -!
+find / -maxdepth 1 -not -iname "MyCProgram.c"
+
+#6.使用inode编号查找文件
+#任何一个文件都有一个独一无二的inode编号
+#ls -i1 test*
+find -inum 16187430 -exec mv {} new-test-file-name \;
+# ls -i1 *test*
+16187430 new-test-file-name
+16187429 test-file-name
+#find -inum 804180 -exec rm {} \;
+
+#7. 根据文件权限查找文件
+find . -perm -g=r -type f -exec ls -l {} \;
+find . -perm 040 -type f -exec ls -l {} \;
+
+#8.找到home目录及子目录下所有的空文件(0字节文件)
+find ~ -empty
+find . -maxdepth 1 -empty
+find . -maxdepth 1 -empty -not -name ".*"
+
+#9.查找5个最大的文件
+find . -type f -exec ls -s {} \; | sort -n -r | head -5
+find . -type f |xargs du -sch |sort -rh |head -6
+
+#查找最小的5个文件
+find . -type f -exec ls -s {} \; | sort -n  | head -5
+find . -not -empty -type f -exec ls -s {} \; | sort -n  | head -5
+
+#11. 使用-type查找指定文件类型的文件
+find . -type s
+find . -type d
+find . -type f
+find . -type f -name ".*"
+find . -type d -name ".*"
+
+#12. 通过和其他文件比较修改时间查找文件
+ls -lrt
+# find -newer ordinary_file
+
+#13. 通过文件大小查找文件
+find ~ -size +100M
+find ~ -size -100M
+find ~ -size  100M
+注意: – 指比给定尺寸小，+ 指比给定尺寸大。没有符号代表和给定尺寸完全一样大。
+
+#14. 给常用find操作取别名
+常用的删除a.out文件。
+alias rmao="find . -iname a.out -exec rm {} \;"
+# rmao
+
+#15. 用find命令删除大型打包文件
+下面的命令删除大于100M的*.zip文件。
+find / -type f -name *.zip [-a] -size +100M -exec rm -i {} \;"
+
+#指定时间段查询修改文件
+find . -amin -60  #60分钟内修改的文件
+find / -atime -1  #1天内修改的文件
+
+#文件详情
+find . -mmin -60 -exec ls -l {} \;
+
+#复制重命名文件
+find . -name ss -exec  cp {} {}.bak \;
+注意，在同一个命令中使用这个{}是可以的，但是在不同的命令里就不行了
+
+#txt后缀的文件添加html
+find . -maxdepth 1 -name "*.txt" -exec mv {} `basename {}`.html \;
