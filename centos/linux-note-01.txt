@@ -6,6 +6,20 @@ Directory Services and Authentication（目录服务和认证）
 Clustering and Storage Management（存储管理）
 System Monitoring and Performance Tuning（系统监控和性能调整）
 
+#soft is service  软件即服务
+iaas
+paas
+saas
+
+cos(cloud object service)       对象云存储
+cdn(content delivery network)   内容分发
+
+#录像
+Win+G
+
+#问题记录器
+psr
+
 #kernel  tree  https://www.kernel.org/pub/linux/kernel/
 drivers：驱动代码
 fs：文件系统的代码

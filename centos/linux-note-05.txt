@@ -1,0 +1,371 @@
+老男孩学习总结,不积跬步无以至千里！
+Linux最常用的日常命令
+man    一般命令
+help   内置命令
+
+tab
+ctrl+c 终止当前程序  ctrl+d  ==exit,logout 退出当前环境
+ctrl+l 清屏 reset重置终端
+
+ctrl+a/e a光标移动到行首，e光标移动到行尾
+ctrl+u/k u清除光标到行首，k清除光标到行尾
+ctr+w    清除当前行==全清
+ctrl+r   在history搜索历史命令，多个可以ctrl+r多按几次
+
+
+
+
+
+电脑--笔记本、台式机、服务器（1U、2U、4U 1U=4.445cm）
+电脑的组成
+主板、CPU、内存、硬盘、显卡、声卡、键盘、鼠标、显示器、电源（双电源，主备）、风扇（降温）
+
+主板：
+    北桥芯片  负责实现与CPU、内存、AGP之间的数据传输（高速传输）
+    南桥芯片  负责实现IDE设备、PCI设备、声音设备、网络设备、存储设备之间
+数据传输（低速传输）
+硬盘：
+   IDE、SCSI、SAS、STAT、SSD（固态硬盘）【网络存储nfs、ISCSI】
+
+核心：
+      处理器（CPU）、存储器、输入输出、内存
+虚拟化核心： CPU集群、存储器集群、内存集群
+
+IO层次缓冲
+CPU----cache(L1、L2、L3)---内存--ssd(普通硬盘、网卡)
+提升速度--缓存
+Buffer  数据写到内存中,内存中存放数据--buffer
+Cache   内存读取数据，内存中存放空间--cache
+memcache   内存型
+redis      内存/硬盘
+
+开源软件
+  freedom  自由、权利、归属
+  free     免费
+开源协议
+    GUN (gun is not unix)
+    Apache
+    GPL (general public license)通用公共许可
+
+unix
+    aix
+    bsd
+
+linux
+    debian --ubuntu
+    redhat --fedora、centeros
+
+ssh工具，开启日志记录很重要的，对后续问题的分析解刨！
+
+Linux基本命令格式：
+command(命令)  opt(操作)   parameter(参数)
+help(cmd)、man(cmd)
+
+重定向  0输入  1输出  2错误
+>>| 1>>  > | 1>
+<<|0<<   <  0<
+2>   2>>  #错误日志追加
+
+cat >>/tmp/run.log <<EOF
+xxx
+EOF
+
+xargs   #从标准输入/出，获取内容和执行命令 -n 分组
+
+ls |grep -v "123.*" |xargs rm -rf   #留下指定文件，其余全部删除
+
+ls *.tar.gz |xargs -n1 tar zxf
+cut -d: -f1 < /etc/passwd | sort | xargs echo  #全部显示，不分行
+cut -d: -f1 < /etc/passwd | sort | xargs -n6  echo #每6个，换行
+find /tmp -depth -name core -type f -delete
+find /tmp/  -name ok -type d -delete
+find /tmp -name core -type f -print | xargs /bin/rm -f
+find /tmp -name core -type f -print0 | xargs -0 /bin/rm -f
+
+find . -type f -name "*.log" -mtime +7|xargs rm -rf #删除7天前的日志文件
+find . -type f -anme "*.log" -mtime +7 -exec rm -rf { } \;
+#查询的结果放到{ }中{}
+mv `find . -type f` /tmp/xox/ #结果批量移动到目标目录
+find . -type f ! -name "*.tar.gz" #排除以tar.gz结尾的文件
+
+#关系判断
+!（取反）   -a and  -o or
+
+cp [opt] source  target
+    -a == -pdr
+    -d 复制连接文件（link file），复制的是源文件，而非链接文件
+    -f 强制（force）
+    -i 目标存在,覆盖则会询问, /bin/cp
+    -p 文档属性，全部复制过去
+    -r 递归复制（复制子目录及文件）
+    -u 更新覆盖（源文件比目标文件新，则覆盖）
+注意： 多个源文件，则目标文件必须是目录
+
+cp -a xx yy /tmp/test/
+/bin/cp -a xx /tmp/   #禁止提醒，默认cp是别名。alias
+
+#工作中常用
+grep
+   -A n 匹配后，后n行 after
+   -B   匹配后，前n行 before
+   -C   匹配后，上下n行 centor
+   -i   ignore 忽略大小写
+   -v   排除
+
+cat sb |grep -v hello
+tail -f nohup.out |grep -iA 200 "error" --color  #实时刷新日志过滤
+ls |xargs du -sch == ll -Sch
+
+head
+tail
+seq    #序列
+sort   #排序
+
+head xx   #默认前10行，同理tail
+head -n 100xx  == head -100 xx
+
+alias cp='cp -i'  #别名
+vim ~/.bashrc  && source ~/.bashrc
+
+
+sed
+  -n  取消默认输出，匹配输出
+  -i  直接修改
+  -e  多项编辑
+p d
+s g
+sed -n '1,3p' /etc/passwd
+sed -e 's/hello/world/g' xxx  #全局替换  / == # @
+
+tree #树形展示
+
+history
+!n   #执行历史命令数字n编号的命令
+!m   #执行最近出现m开头的历史命令
+!!   #执行上次命令
+ctrl +r  #历史命令搜索，多次敲击进行多次匹配
+
+#查看系统位数
+uname -m  #系统架构
+x32 2^32-1  #最大支持4G内存，目前逐步淘汰x32架构的机器（内存足够便宜）
+x64 2^64-1  #最大支持
+
+磁盘分区
+MBR
+最大支持2T磁盘
+max-4主分区  --3个主分区1个扩展分，分区编号5开始（需要再次分区格式化才可以使员工）
+GPT
+#建议使用lvM挂载磁盘（后续可以对磁盘分区大小进行升降）
+/boot 200M
+/swap 2x  8G+  1.5x
+/data
+/
+
+硬盘接口
+IDE  /dev/hda  /dev/hdb
+SCSI /dev/sda  /dev/sdb
+
+
+#linux 优化
+主机名
+hosts
+防火墙
+
+关闭selinux
+setenforce 0 && sed -i 's/SELINUX=enforcing/SELINUX=disable/g'
+
+运行级别
+runlevel  0、1、2、3、4、5、6
+init 0（关机）  init 6（重启）  init 3（多终端文本）  init 5(图形化)
+
+历史命令
+history     ~.bash_history 历史命令记录文件
+ctrl+r
+TMOUT=300      连接超时5min,自动退出
+HISTSIZE=1000       命令行记录命令的数量
+HISTFILESIZE=2000   历史命令在文件的记录数量
+
+优化Linux自动开机服务
+for i in
+
+
+chkconfig --list | grep '0:off' |awk '{print $1}'
+
+
+#全部服务禁用开机自启动
+chkconfig --list | grep '0:off' |awk '{print $1}' |xargs -i  chkconfig {} off;
+#选择既定的服务开机自启动
+#!/bin/bash
+for i in 'sshd' 'network'
+do
+    chkconfig $i on;
+done
+
+#文件删除原理
+i_link=0 链接数，,i_count=0文件使用的进程，文件删除完毕，inode释放
+
+#文件内容置空，磁盘空间未释放
+cat /dev/null >nohup.out
+
+stat file 文件的详细信息
+access atime
+modify mtime
+change ctime
+find /  -type f -name "*.log"  -mtime +7
+
+#通配符
+*  代表0到多个字符
+?  代表一个字符
+
+#对命令的结果对错，丢进黑洞 2>&1  把命令参数错误的提示追加得到正确输出的后面
+command > /dev/null  2>&1
+nohup command  &   #后天运行日主输出到当前nohup.out
+nohup command >xxx.log &
+
+"xx"(弱引用，能识别参数等)   'xx'（强引用，按照原样输出）
+
+#grep
+-i ignore 忽略大小写
+-n 行号
+-v 排除指定的
+-E egrep
+-A  after
+-B  before
+-C  centor
+
+
+#sed stream editor 流编辑器
+sed  [options] [sed-command]  [file]
+
+--增加
+a  行尾
+i  行前
+
+d  删除
+p  打印
+
+sed -i  s/xxx/yyy/g   file;
+sed -n  1,3p  file
+
+
+ln -sf source_file  target_file;
+ln source_file   target_file
+readlink   xxx; 读取软连接目标文件
+
+#定时同步系统时间 crond
+*/20 * * * * /usr/bin/ntpdate ntp.tencent.con >/dev/null 2>&1
+10 3 * * 3 /usr/sbin/ntpdate 219.233.237.2 && /sbin/hwclock -w
+
+chmod   权限（文件、文件夹）
+chown   归属（用户、用户组）
+chgrp   组别（修改组）
+
+chattr +i  +a
+lsattr
+
+cat、tar、more（一直下）、less（上下翻）、 head、tail   cut
+
+#磁盘总结
+fdisk -l
+fdisk
+mkfs.ext4 xfs
+partprobe
+mkswap
+swapon
+mount
+umount
+
+#tr  字符串替换、格式化
+
+#tcp/ip    port 1-65535
+源端口随机分配，目标端口指定
+
+CLI  command line interface
+GUI  graphical user interface
+
+history
+  history -c   /etc/profile 1000个
+!!
+!str
+!num
+Ctrl+r #历史命令搜索
+
+
+
+nohup ./command &
+pgrep "command"  | xargs kill -9
+
+jobs
+bg
+fg
+kill %num
+
+stat go.sh
+touch go.sh  #对已存在的文件更新时间戳
+
+#ssh登陆提示信息
+
+/etc/issue
+   \d    系统日期
+   \s    操作系统名字
+   \m    硬件架构
+   \n    主机名
+   \r    内核信息
+   \t    系统时间
+/etc/ssh/sshd_config
+Banner /etc/issue.deny   #定义登陆提示信息
+
+#ssh进入欢迎信息
+
+/etc/motd
+
+
+MBR/GPT
+
+fdik  -l
+
+fdisk /dev/vdb
+
+partprobe  #更新内核分区信息
+
+mkfs.ext4  /dev/vdb1
+dumpe2fs /dev/vdb1  #查看磁盘分区信息
+
+journal  日志
+
+e2label /dev/vda1 mvpbang  #打标签
+
+
+#对磁盘的检修，必须先卸载
+fsck /dev/vda1
+ -y  不提示错误，直接修复
+ -t   文件类型
+
+fsck -t ext4 -y /dev/vda1
+
+mount
+            mount  挂载分区   挂载点
+  -t  类型
+  -o  挂载选项
+     rw,ro  可读写，只读
+     loop   挂载iso
+     sync   不使用缓存，所有操作直接对磁盘
+     async   默认异步（操作先缓冲到内存在写到磁盘）
+     noatime
+     atime   访问文件更新
+     remount 重新挂载
+
+mount /dev/sdb1  /mnt
+mount -t nfs 10.10.24.1:/share /nfspub
+
+df -l        #本地磁盘挂载信息
+df -hT       #本地及挂载磁盘信息
+mount | coloumn -t  #查看远程挂载点失效，导致df -hT卡死，清理掉失效的
+
+/etc/fstab   #开机自动挂载
+
+/dev/sdb1 /mnt  ext4   defaults  0 0
+mount -a   #刷新自动挂载配置文件
+
+
+nfs+inotify   实时同步   

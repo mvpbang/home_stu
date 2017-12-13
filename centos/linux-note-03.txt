@@ -1,0 +1,689 @@
+Linux系统调优
+业务  --business level tune
+应用  --application leve tune
+内核  --kernel level  tune
+
+#软硬链接
+ln -sf  source  target
+ln  source target  #硬链接不能跨分区
+
+#批量解压文件 -n1 一条一条进行
+ls *.tar.gz | xargs -n1 tar zxf
+unzip -o xx.zip   -d /tmp/
+
+#杀掉用户的全部进程
+lsof -u weblogic | xargs kill -9
+
+#释放cached内存,cache缓存过大
+sync   #把在内存中未写到磁盘，写到磁盘
+echo 1 > /proc/sys/vm/drop_caches  #1 --true   0 --false
+echo 0 > /proc/sys/vm/drop_caches
+cache   #从内存中读数据，分配的内存空间
+buffer  #从数据写到内存，分配的内存空间
+
+#sort [-fbMnrtuk] [file or stdin]
+-f  ：忽略大小写的差异，例如 A 与 a 视为编码相同；
+-b  ：忽略最前面的空格符部分；
+-M  ：以月份的名字来排序，例如 JAN, DEC 等等的排序方法；
+-n  ：使用『纯数字』进行排序(默认是以文字型态来排序的)；  默认按照字母顺序排列
+-r  ：反向排序；
+-u  ：就是 uniq ，相同的数据中，仅出现一行代表；
+-t  ：分隔符，默认是用 [tab] 键来分隔；
+-k  ：以那个区间 (field) 来进行排序的意思
+cat /etc/passwd | sort -t ':' -k 3n  #第三列按照字母排序
+cat /etc/passwd |  sort -t':' -k 6.2,6.4 -k 1r  #第6列，2-4中间的字母正向排序，再以1列反向排序
+cat /etc/passwd |  sort -t':' -k 7 -u  #第7列，去重
+
+#uniq [-icu]
+选项与参数：
+-i   ：忽略大小写字符的不同；
+-c  ：进行计数
+-u  ：只显示唯一的行
+
+#cut
+cut -d'分隔字符' -f fields <==用于有特定分隔字符
+cut -c 字符区间            <==用于排列整齐的信息
+选项与参数：
+-d  ：后面接分隔字符。与 -f 一起使用；
+-f  ：依据 -d 的分隔字符将一段信息分割成为数段，用 -f 取出第几段的意思；
+-c  ：以字符 (characters) 的单位取出固定字符区间；
+
+echo $PATH | cut -d ':' -f 7     #以:分隔符，取7列值
+echo $PATH | cut -d ':' -f 3,5   #取3,5列的值
+echo $PATH | cut -d ':' -f 1-3   #取1-3列的值
+echo $PATH | cut -d ':' -f 3-    #取3到最后列的值
+echo $PATH | cut -d ':' -f 1-3,5  #取1-3,5列的值
+
+#wc [-lwm]
+-l  ：仅列出行；
+-w  ：仅列出多少字(英文单字)；
+-m  ：多少字符；
+
+#ftp批量下载
+#!bin/bash
+wget -nH -m --ftp-user=your_username --ftp-password=your_password  ftp://ip/dir-xx
+
+#参数含义
+-nH：不创建以主机名命名的目录。
+–cut-dirs：希望去掉原来的目录层数，从根目录开始计算。如果想完全保留FTP原有的目录结构，则不要加该参数。
+-m：下载所有子目录并且保留目录结构。
+–ftp-user：FTP用户名
+–ftp-password：FTP密码
+-P 下载到指定目录
+-r 递归下载
+
+#后台日志记录
+nohup ./xxx &  #nohup.out
+nohup ./xxx >/tmp/log &
+xxx >/dev/null 2>&1   #丢进黑洞
+
+#xargs   -i 結果當做替換字符串 reprstr
+find . -type d -name "nginx"|xargs -i  mv  {} sos/
+find . -type d -name "nginx"|xargs -i  cp -r {} sos/
+ls "*.tar.gz" |xargs -n 1 tar zxf  #等价于一个一个解压
+#-i 表示 find 传递给xargs的结果 由{}来代替
+#xargs -i {}参数替换     -n num 分行个数
+
+#TCP wrappers
+  hosts.allow
+  hosts.deny
+/etc/hosts*    hosts.allow优先于hosts.deny
+服务（守护进程） 允许访问Ip
+all、local
+in.sshd  172.24.0.1
+in.telnet,vsftpd   all  #多个服务
+
+#date日期
+%Y  2017  %y 17 #后两位
+%m  06  %d  12
+%H-%M-%S
+%F   #2017-06-19
+%T   #15:48:22
+%s   #1970开始
+
+date -s '12:12:12'
+clock -w #把系统时间写入CMOS
+date -s "2017-01-11 18:00"  #-s system 系统时钟
+clock -w                    #系统时间写到服务器时钟
+date -s "2016-12-07 12:00:00"    ###修改系统时间
+hwclock -w                       ###系统时间同步到时钟时间
+
+#并发数=QPS/事件平均响应时间，QPS每秒处理的事务
+#IO、并发数、监控
+
+grep CPU /proc/cpuinfo
+lscup
+
+#日志清空
+cat /dev/null >xx
+>xx
+true >xx    == :>xx.log
+echo >xx
+echo "">xx
+
+#网络TCP/IP
+ifconfig #ip a
+ifconfig eth0 up /down
+ifconfig etho 192.168.1.100 netmask 255.255.255.0 up  #临时设置ip
+ifconfig etho 007.com up
+ifup ethx       ###网卡的配置名字 /etc/sysconfig/network-script/ifcfg-eth0
+ifdown ethx
+
+ps -ef |grep nohup ###后台运行的程序
+jobs
+&  #后台运行
+fg #后台调到前台
+bg #前台调到后台
+
+vim
+命令模式
+cw   #删除光标到词尾
+c$   #删除光标到行尾
+c^   #删除光标到行头
+shift+$   #跳到行尾
+shift+^   #跳到行头
+#G        #跳到第#行
+:set nu
+使用替换命令
+:% s/^/#/g     来在全部内容的行首添加 # 号注释
+:% s/^M/ /g    删除^M特殊字符全局
+:1,10 s/^/#/g  在1~10 行首添加 # 号注释
+:1,10d         删除1-10行
+
+运维开发工程狮(devops)
+Ubuntu(LTS)LTS为Long Term Support的简写 长期支持
+/etc/sysctl.conf  ---内核参数优化
+sysctl -p         ---刷新内核参数
+ps aux |wc -c    #统计进程总数 == top
+
+ptree    进程     ---显示进程信息    lsof -p xxx
+pgrep -l 进程名   ---显示pid
+pkill    进程名   ---killall  掉进程组  kill 杀掉单进程
+kill -9  pid
+
+chattr
++ - =
+-a  append
+#只能向文件中添加数据，而不能删除，多用于服务器日志文件安全，只有root才能设定这个属性
+-i
+#文件不能被删除、改名、设定链接关系，同时不能写入或新增内容。i参数对于文件
+-s
+#保密性地删除文件或目录，即硬盘空间被全部收回
+lsattr
+  -a  全部显示
+  -d  显示目录
+  -R  递归显示
+
+chattr +i /etc/resolv.conf
+chattr -i /etc/resolv.conf
+chattr +a /var/log/messages #日志只追加，不能删除
+
+alias  xxx='data'
+linux
+入门级  redhat
+企业级  suse-linux
+娱乐办公 ubuntu
+setup/ntsysv  ###redhat的图形化系统配置
+
+#磁盘操作
+fdisk /dev/sda
+  -n   添加分区
+  -d   删除分区
+  -p   打印分区信息
+  -t   修改文件系统类型
+  -l   分区类型列表
+  -w   写分区表
+
+mkfs.ext4  /dev/sda1
+mkfs -t ext4 /dev/sda1
+
+MBR  4T
+GPT  18EB   bit-byte-kb-mb-gb-tb-pb-eb  1024进制
+fdisk -l
+parted
+
+#分区--格式化--挂载
+swap
+fdisk /sda
+mkswap  /xxx  swapon /xxx
+swapon -r     free -m
+vim /etc/fstab  #写进启动加载磁盘
+
+#详解
+mkswap
+ 创建一个交换分区或文件. 交换区域随后必须马上使用swapon来使能.
+swapon, swapoff
+ 使能/禁用 交换分区或文件. 这两个命令通常在启动和关机的时候才有效.
+
+useradd
+    -g  新用户组
+    -G  附属组  多个，隔开
+    -d  用户家目录
+    -s  登录shell  /bin/false /sbin/nologin /bin/bash  (默认)
+    -e  账户失效时间  06/06/2017  expire  chage -l root
+    -M  不建立用户家目录
+usermod -l user1 user2
+usermod -L mvpbang  ###锁定用户  lock
+usermod -U mvpbang  ###解锁用户  unlock
+userdel -r user1    ###删除user1及其/home/user1的家目录
+
+groupadd -g 888 mvp
+groupadd -r bang   系统组gid<500
+groupmod -g 512 mvp   修改组gid
+groupmod -n xxx yyy   修改组名字
+
+rpm -ivh xxx.rpm   --nodeps --force
+rpm -Uvh xxx.rpm   升级
+rpm -e xxx.rpm
+rpm -ql   xxx
+rpm -qa | grep xxx
+
+/etc/resolv.conf   dns配置
+/etc/sysconfig/network
+/etc/xinetd.conf   超级进程启动网络服务 tftp
+/etc/hosts
+/etc/hosts.allow
+/etc/hosts.deny
+/etc/host.conf
+
+traceroute   ###网关、路由探测
+
+/boot/grub/grub.conf  /etc/grub.conf
+/etc/rc.d/rc.local   本地
+/etc/rc.local
+
+远程执行命令
+ssh user@ip  -p 2222 "command"   ###需要密码认证，秘钥自动登录
+秘钥登录
+ssh-keygen  -t rsa/dsa  ###(默认rsa)
+ssh-copy-id [-i [identity_file]] [user@]machine
+###自动携带私钥给目标主机
+ssh-copy-id -i  ~/.ssh/id_rsa.pub  root@172.24.0.27  ### .ssh/authorized_keys  自动放到
+
+文件互传
+scp -vc[r]  user@ip:file_path   local_file_path
+scp -vc[r]  local_file_path     user@ip:remote_file_path
+
+lsof
+    lsof   go.sh   #查看文件进程相关信息
+    lsof -p pid
+    lsof -i:port   #查看端口的占用情况
+    lsof  /xxx/    #目录下运行的进程
+lsof -u mvpbang    #查看指定用户的所有进程
+top - u mvpbang
+lsof -t  go.sh     #查看指定执行文件的PID
+[root@27 ~]# lsof -t rgp.sh
+5805
+[root@27 ~]# lsof -t rgp.sh | xargs kill -9
+
+kill -l #查看支持的信号，信号对应的ID号
+    -exit  0   程序退出
+    -hup   1   挂起
+    -int   2   中断
+    -quit  3   退出
+    -kill  9   杀死，干掉进程，具有强制性
+    -term  11  软件终止
+kill -signal pid  程序收到信号执行信号的指令或忽视，忽视则kill执行默认的终止指令
+Ctrl+C  中断===init  Ctrl+D 注销退出
+
+进程的优先级  -20-19 值越大，优先级越低，故占用CPU的时间短
+nice   #相对值
+   nice -n  2 bc
+   nice bc   #将bc优先级设置为0
+renice #绝对值
+   renice +12 -p pid    #建议用renice 调整进程的优先级
+lsof -lA | grep bash   ###查看脚本的nice，配置lsof -t xx.sh的pid确定ni
+
+/etc/sysconfig/network-scripts/
+/etc/udev/rules.d/70-persistent-net.rules  ###定义网卡命名规则
+ifcfg-eth0   #文件
+DEVICE=eth0                    物理设备名称
+IPADDR=192.168.1.x             IP地址
+NETMASK=255.255.255.0          子网掩码
+NETWORK=192.168.1.0            指定网络，通过IP地址和子网掩码自动计算得到
+GATEWAY=192.168.1.1            网关地址
+BROADCAST=192.168.1.255 广播地址，通过IP地址和子网掩码自动计算得到
+ONBOOT=[yes|no]               引导时是否激活设备
+USERCTL=[yes|no]              非ROOT用户是否可以控制该设备
+BOOTPROTO=[none|static|bootp|dhcp]    引导时不使用协议|静态分配|BOOTP协议|dhcp协议
+HWADDR=00:13:D3:27:9F:80   MAC地址 当ethx丢失，ifconfig eth0 192.168.0.24/24 up获取MAC地址
+NAME=eth0 名称
+
+lsblk   #磁盘分区信息
+blkid   #磁盘分区ID
+
+dd
+  相同分区中复制文件，if=输入 of=输出
+  dd if=/dev/cdrom of=rhel.iso
+  dd if=/dev/zero  of=/root/baiud.mp4 count=100 bs=3M
+  dd if=/dev/sda3  of=/dev/sda4    #磁盘的备份
+fdisk  /dev/sda  #划分磁盘
+
+free -m  #交换分区swap
+mkswap /dev/sda4      #初始化
+swapon /dev/sda4      #检查并激活交换分区
+swapon -s             #检查交换分区swap
+swap 修改磁盘标识82默认为swap
+
+passwd xxx  # echo "xxx"  | passwd user --stdin
+id -[u|g] xx
+su - xx  -c  pwd  #-c 后天切换执行命令   /etc/rc.d/rc.local  开机启动脚本
+sudo xxx
+/etc/sudoers  #99
+
+Win+x 集成平台---便捷管理系统
+
+
+正则表达式
+\分别表示单词的开始和结束   exp :   \<bbc\>
+ex: \ 以T或者t开头，om结尾的单词
+正则表达式的元字符集：
+1) ^行首 /^love/ 以love开头的行；
+2) $行尾 /love$/ 以love结尾的行；
+3) .    /l..e/ 匹配所有这样的行，字母l后面紧跟任意两个字符然后是e的行
+4) * 重复0次或者任意多次前面字符
+5) [x-y] 字符范围
+6) [^x-y] 排除字符范围
+7) \ 转义字符
+8) \ 界定单词的开头和结尾
+9) \( \) 标记后面用到的匹配字符 \(love\)able \1er=loveable lover
+10) x\{m,n\} 重复字符x至少m此，至多n次
+
+grep家族
+RE--regular expression; g: global; p: print  #egrep 支持正则
+\w 字母或者数字
+\W 非单词字符（标点符号）
++ 重复一个或者多个前面的字符
+｜ 或 love(a:b)表示lovea或者lobeb
+？单个字符
+grep返回状态值（$?） 0表示成功，1表示失败，2表示没有找到文件
+
+ls -l |grep ^d 显示目录
+grep
+-i 不区分大小写
+-n 显示匹配行和行号
+-v只显示不匹配行
+-#显示匹配行上下#行
+-A#匹配行后面打印#行
+-B#匹配行前面打印#行
+-C#匹配行的前后#行
+-c 只输出匹配行的行数
+-h 查询多文件的时候不显示匹配的文件名字
+-l 查询多文件只显示匹配的文件名
+-s 不显示错误信息
+
+
+grep与正则表达式同用
+grep "^[^abc]" *.f 提取行首不是abc的行
+grep "[0-9]\{3\}[8]" *.f 提取类似xxx8的行，x表示任意数字
+grep "a\{2\}" *.f 显示a至少出现两次的行，注意grep是以行处理单位的
+grep -n "^$" file 列出空行的行号
+-E参数，可以使用"与"和"或"模式
+grep -E "abc | def" *.f 显示包含abc或者def的行
+ex:
+ls -l | grep "^$" 显示目录
+ls -l | grep "^d" 显示文件
+ls -l | grep "^d..x..x..x" 显示特定权限的目录
+ps aux | grep "httpd" |grep -v "grep"
+---------------------------------------------------------------------------
+---------------------------------------------------------------------------
+**使用find和xargs
+1. find pathname -options [-print -exec -ok]
+-optinos
+1)-name:按照文件名查找
+find ~ -name "*.txt" -print
+find ~ -name "[a-z][0-9].txt" -print
+2)-perm:按照权限查找文件
+find ~ -perm 755 -print 查找权限为755的文件
+find ~ -perm 007 -print 查找o位置上具有7权限的文件
+find ~ -perm 4000 -print 查找具有suid的文件
+3)-prune
+不在当前目录下查找
+4)-user和－nouser
+find ~ -user zhao -print 查找文件属主是zhao的文件
+find ~ -nouser -print 查找文件属主已经被删除的文件
+5)-group和－nogroup
+find ~ -group zhao -print 查找文件群组是zhao的文件
+6)按照时间
+find ~ -mtime -5 -print 文件更改时间在5天内的文件
+find ~ -mtime +3 -print 文件更改时间在3天前的文件
+find ~ -newer file1 -print 查找比文件file1新的文件
+7)按照类型查找
+find ~ -type d -print 查找所有目录
+8)按照大小
+find ~ -size +1000000C -print 查找文件大小大于1000000字节(1M)的文件
+9)查找位于本文件系统里面的文件
+find / -name "*.txt" -mount -print
+-exec,-ok:find命令对于匹配文件执行该参数所给出shell命令，相应命令形式为: 'command' {} \;
+-ok 在执行命令前要确认
+find ~ -type f -exec ls -l {} \;
+find / -name "*.log" -mtime +5 -ok rm {} \;
+find . -name core -exec rm {} \;
+使用-x dev参数
+防止find搜索其他分区
+find . -size 0 -exec rm {} \;
+删除尺寸为０的文件
+2. xargs与-exec功能类似
+find ~ -type f | xargs ls -l
+find / -name "*.log" -type f -print| xargs grep -i DB0
+find . -type f |xargs grep -i "Mary"
+在所有文件中检索字符串Mary
+ls *~ |xargs rm -rf
+删除所有以~结尾的文件
+
+查找文件
+    which     在bin/sbin 目录下查找执行文件
+    whereis   查找执行文件的位置及帮助文件
+    locate    速度快，给予文件索引。updatedb 更新数据库索引
+    find      对于目录中文件基数大，效率相当的缓慢
+
+tree -d          #列目录
+tree -L 2        #目录的最大深度
+tree -f /root    #相对路径显示
+tree -t          #按照文件目录的时间排序
+
+开机自启动，切换到其他用户执行脚本
+在/etc/rc.d/rc.local中加入如下内容：
+#vi /etc/rc.d/rc.local
+ su - oracle -c "/u01/app/oracle/product/9.2.0.4/bin/lsnrctl start"
+ su - oracle -c "/u01/app/oracle/product/9.2.0.4/bin/dbstart start"   #没命令的是
+
+lsb_release  命令不存在
+yum provides */lsb_release #查看命令来自哪个rpm包
+
+pgrep -P   nginx  #返回父进程的PID
+      -l   mysql  #返回进程PID及进程名字
+
+nohup command > myout.file 2>&1 &
+nohup ./gohead &
+
+kill -9 $(lsof -i :7090|grep "(LISTEN)"|awk '{print $2}')
+ps auxf |grep -v grep|grep "/opt/cron"|awk '{print $2}'|xargs kill -9
+
+cp -u 差异复制
+rsync 差异备份
+date %Y %m  %d
+按时间段截取
+sed使用
+sed -n '/2013:15:25:00/,/2013:15:30:00/p' access.log >25-30.log
+
+grep使用
+grep "2013:15:2[5-9]" access.log >25-30.log
+漏洞证明
+EXP  proof 证明  concept 观点、想法
+POC = Proof of Concept中文意思是“观点证明”。这个短语并非仅仅在漏洞报告中使用，甲方在项目招标过程中也常常要求乙方提供POC，即证明你的方案或者产品能达到声称的功能或性能，漏洞报告中的POC则是一段说明或者一个攻击的样例，使得读者能够确认这个漏洞是真实存在的。
+EXP = Exploit的中文意思是“漏洞利用”。意思是一段对漏洞如何利用的详细说明或者一个演示的漏洞攻击代码，可以使得读者完全了解漏洞的机理以及利用的方法。
+
+end=`date '+%Y-%m-%d %H:%M:%S'`
+
+/etc/motd   ###进入shell的欢迎bander
+###排除空格
+grep -v '^$'
+
+egrep -v "(^#|^$)"   ===  grep -E -v "(^#|^$)"   #
+#不显示空格行和#开头的行
+
+###删除指定的排除文件
+rm -rf `ls | grep -v 'src'`
+ls | grep -v "^aa$" | xargs rm -rf
+
+watch -n 3 "cat /proc/loadavg"    ###每隔
+
+##查看账户密码到期时间
+chage -l 用户帐户    ###expires 过期
+~$ chage -l yc
+Last password change : 7月 25, 2015
+Password expires : never
+Password inactive : never
+Account expires : never
+Minimum number of days between password change : 0
+Maximum number of days between password change : 99999
+Number of days of warning before password expires : 7
+
+md5sum xxx  查看文件的md5值
+
+
+##输出结果丢进黑洞
+ > /dev/null 2>&1
+ &> /dev/null
+
+ cat /etc/zabbix.conf | egrep -v '(^#|^$)'
+ cat /etc/zabbix.conf | grep -v "^#" | grep -v "^$"
+
+
+date +%Y-%m-%d-%H-%M-%S
+
+大小写转换
+tr a-z A-Z
+tr [:lower:] [:upper:]
+echo "this is a test" | tr a-z A-Z > www
+### 3.去掉不想要的字串
+tr -d this ### 去掉有关 t.e.s.t
+### 4.取代字串
+tr -s "this" "TEST"
+
+vim块注释
+
+01、进入视图模式
+v进入视图模式，控制方向键选中注释的代码
+02、进入列模式并插入#
+ctrl+v进入列，I（大写）插入注释#
+03、全部注释
+esc两次自动全部注释
+取消块注释
+ctrl+v控制方向键选中块注释代码，d删除注释符号
+
+正则表达式  regexps
+.   单个任意字符，除去换行符   \.  ###转义的字符.
+[a-z] [abc]   [a-zA-Z]   -###代表的范围的字符集
+\<[a-z]mvp\>  \<mvpbang\>  ###单词以mvp结尾，以字母开头  cat /root/readme.txt
+
+元字符
+^  头
+$  尾
+
+重复
+
+^a.*t$   ---a开头，t结尾的文件夹
+.  --一个任意字符
+*  --重复0或多次
+.* --代表中间任意字符
+
+ls | egrep "^a.*t$"
+
+文本操作
+\<abc\>  ---abc是一个单词
+
+*  0或无穷多
+？ 0或1个
+.  任意一个
++  1或无穷多
+{n}  重复的次数
+{n,}
+{n,m}
+cat go |egrep "(aa){1,}"  ---aa重复1次以上
+
+cat go |egrep "aa{2,}"   ---aa后面a重复2次以上
+
+
+反义
+[^a]     排除a
+
+[abcd]   字母abcd
+
+逆向引用
+(\<.*\>).?( )*\1
+-----
+(\<.*\>)  任意长度的单词
+.?        0或1个。
+( )*      任意一个空格
+\1 ..       匹配到的模式
+
+cut
+-d --指定分隔符
+-f 指定列
+-c 行字符
+cut -c6-9  xx.txt   #每行6-9
+cut -d" " -f2 xx.txt  ###-d 指定分隔符
+
+sort  --排序
+uniq  --去掉重复行
+sort xxx.txt | uniq
+
+tr  --字符替换
+
+wc
+substr
+seq
+
+split  文件切割
+basename    --文件名
+dirname     --路径名字
+
+/etc/profile
+/etc/bashrc
+~.bash_profile
+~.bashrc
+
+top
+交互模式的一些快捷操作:
+
+    全局命令: <回车/空格> ?, =, A, B, d, G, h, I, k, q, r, s, W, Z
+    统计区的命令: l, m, t, 1
+    任务区的命令：
+         外观: b, x, y, z 内容: c, f, H, o, S, u 大小: #, i, n 排序: <, >, F, O, R
+    色彩方案: <Ret>, a, B, b, H, M, q, S, T, w, z, 0 - 7
+    窗口命令:  -, _, =, +, A, a, G, g, w
+
+
+lsof命令，意为“list open files”, 用于在许多类Unix系统中显示所有打开的文件及打开它们的进程
+
+Linux/Unix  一切皆文件（设备、套接字、等）
+# lsof +p process_id
+# lsof | less
+# lsof –u username
+# lsof /etc/passwd
+# lsof –i TCP:ftp
+# lsof –i TCP:80
+
+lsof -i -sTCP:LISTEN       #等待建立的链接
+lsof -i -sTCP:ESTABLISHED  #已经建立的链接
+lsof -i | grep -i ESTABLISHED
+
+lsof -u daniel
+lsof -u ^daniel
+kill -9 `lsof -t -u daniel`
+kill -HUP `lsof -t -c sshd`
+lsof  -c  sshd    ###sshd服务网络链接
+lsof -t -c sshd   ###返回pid
+lsof -p pid
+lsof /xx/        ###文件夹
+lsof /xx/yy      ###文件
+
+格式化文本  -s 字符串 -f 浮点小数  -c -d  -左对齐，不加默认右对齐 -5 -10 列与列的宽度，不够用空格补齐
+#/bin/bash
+printf "%-5s %-10s %-4s\n"  NO Name Mark
+printf "%-5s %-10s %-4.2f\n"  1  mvp  67.2345
+printf "%-5s %-10s %-4.2f\n"  2     bang   88.567
+效果：
+[root@mvp shell_root]# sh printf.sh
+NO    Name       Mark
+1     mvp        67.23
+2     bang       88.57
+
+打印文本颜色，32文本为绿色
+#!/bin/bash
+echo -e "\e[1;32m mvpbang,you are red!\e[0m"
+
+stdin  0  标准输入
+stdout 1  标准输出
+stderr 2  标准错误
+
+tree与tee
+tree  树形显示目录下子文件和文件夹
+tee   显示并输出到文件中
+统计xxx文件夹中c后缀的文件数量
+find xxx -type f -name "*.c" -print0 | xargs -0 wc -l
+
+
+分割文件
+split -b  大小分割 k M
+      -h  行分割
+      -d -a - 默认不加次参数是字母后缀， -d 数字 -a 限定数字的长度
+split -b 20M  filexxx -d -a 3 yyy_
+cat yyy_*  > filexxx   #整合分割文件
+md5sum  filexxx        #效验整合后的文件MD5
+
+#apache不显示版本号
+
+http.conf 中的 修改为
+ServerTokens Prod
+ServerSignature Off
+
+php
+php.ini 中的 修改
+expose_php = Off
+
+nginx
+nginx.conf 的 http 中 添加
+server_tokens off;

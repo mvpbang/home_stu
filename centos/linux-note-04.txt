@@ -1,0 +1,432 @@
+file #探测文件类型
+file xx
+file -f filetype.txt #探测文件列表的文件
+
+mkdir #建立目录
+mkdir -m 700 /tmp/mvpbang       #权限，默认umask 022
+mkdir -p /tmp/data/cmake{1..4}  #递归建目录
+
+grep #global regular expression print
+-i   #ignore 忽略大小写
+-n   #匹配显示行号
+-A   #after  匹配后n行
+-B   #before 匹配前n行
+-C   #centor 匹配前后n行
+-w   #仅仅输出完全匹配单词的行
+-I   #显示匹配包含字符的文件
+-v   #显示不匹配的文件、行
+pattern 正则表达式
+\        #转义
+^ $      #行头、行尾
+[]  [1-9]   #连续性
+. *       #单个任意、任意字符
+ls |grep ^dd
+ls |grep -w "ddos"
+#不显示#开头的行及空行
+cat /etc/ssh/sshd_config |grep -E -v '(^#|^$)'  #egrep = grep -E
+cat /etc/ssh/sshd_config |egrep -v '(^#|^$)'
+
+---grep '[0－9]\{3\}\.[0－0\{3\}\' ipfile
+
+
+dd  #复制、格式化文件
+if   读取
+of   写入
+bs   字节
+count数量
+dd if=/vmlinuz of=/dev/fd0
+dd if=/dev/zero of=mvpbang.iso bs=10M count=6  #填充文件0
+dd if=/dev/sda of=/dev/sdb
+
+find #查找
+-name -iname #支持？ * 通配
+-depth  -maxdepth -mindepth
+-atime -ctime -mtime
+-user -group
+-size
+-and -a -or -o
+find . -iname "dd*"
+find . -iname "dd*" |xargs -n1 basename #仅仅显示文件/文件夹名字
+find . -mtime +7 and -mtime -10 |xargs rm -rf
+find / -maxdepth 4  -a -iname "ddos"
+
+mv #移动、复制、重名名
+-f 禁止交互
+mv -f xiaobang mvpbang
+
+ls #list 列出
+-a
+-A
+
+Linux在终端支持中文显示
+export LANG=zh_CN.UTF8
+export LANG=zh_CN.GB18030
+export LANG=en_US.UTF-8    #english
+source /etc/profile
+
+删除0字节文件
+find -type f -size 0 -exec rm -rf {} \;
+
+查看进程,按内存从大到小排列
+ps -e -o "%C : %p : %z : %a"|sort -k5 -nr
+
+按cpu利用率从大到小排列
+ps -e -o "%C : %p : %z : %a"|sort -nr
+
+查看http的并发请求数及其TCP连接状态：
+netstat -n | awk '/^tcp/ {++S[$NF]} END {for(a in S) print a, S[a]}'
+
+如何杀掉mysql进程：
+ps aux |grep mysql |grep -v grep |awk '{print $2}' |xargs kill -9
+
+killall -TERM mysqld
+
+kill -9 `cat /usr/local/apache2/logs/httpd.pid` 试试查杀进程PID
+
+如何在编写SHELL显示多个信息，用EOF
+cat << EOF
++--------------------------------------------------------------+
+| === Welcome to Tunoff services === |
++--------------------------------------------------------------+
+EOF
+
+批量重命名
+find . -type f -name '*.a' |sed 's/^\(.*\)\.a$/mv &amp; \1.b/'|sh
+for i in *.a;do mv $i `echo $i | sed 's#a#b#g'`;done
+for file in *.gz;do mv $file `basename $file .gz`.zip;done
+
+删除空目录
+find . -type d -empty | xargs rm -rf
+
+找出当前目录下2K以上的文件移到/tmp目录
+find . -type f -size +2k|xargs -i mv {} /tmp
+
+shell求1到100和的问题
+seq 1 100 | awk '{sum+=$0}END{print sum}'
+
+查询一个进程已经运行了多长时间
+ps -eo comm,etime | grep syslogd | awk '{print $2}'
+
+lsof命令
+lsof abc.txt 显示开启文件abc.txt的进程
+lsof -i :22 知道22端口现在运行什么程序
+lsof -c abc 显示abc进程现在打开的文件
+lsof -p 12 看进程号为12的进程打开了哪些文件
+
+#在忘记mysql密码的情况下修改root密码
+bin/mysqld_safe --skip-grant-tables &
+bin/mysql -uroot -p
+mysql> use mysql;
+mysql> update user set password=password('sa')where user='root';
+mysql> flush privileges;
+
+#grep关键字自动彩色
+vim /etc/bashrc
+export GREP_COLOR='1;33'
+export GREP_OPTIONS='--color=always'
+
+source /etc/bashrc
+
+
+#批量清空文件内容
+ls | xargs truncate -s 0
+
+#删除一周前的数据
+rm -f /home/backup/wiki-`date -d "1 week ago" +"%Y-%m-%d"`.tgz
+
+#批量解压文件
+ls *.tar.gz | xargs -n1 tar xzvf
+find -maxdepth 1 -name "*.gz"|xargs -i tar xvzf {}
+for i in $(ls *.gz);do tar xvf $i;done
+
+curl
+-i/--include 输出时包括protocol头信息
+-I/--head 只显示文档信息
+-o    #文件保存指定的文件名
+-O    #URL文件名原样保存本地
+curl -o sb.html  http://www.baidu.com/index.html  #index.html==sb.html
+curl -O          http://www.baidu.com/index.html  #index.html==index.html
+
+---FTP---
+curl -u ftpuser:ftppass -O ftp://ftp_server/public_html/
+
+curl -u ftpuser:ftppass -O ftp://ftp_server/public_html/xss.php
+
+
+#将myfile.txt文件上传到服务器
+curl -u ftpuser:ftppass -T myfile.txt ftp://ftp.testserver.com
+
+#同时上传多个文件
+curl -u ftpuser:ftppass -T "{file1,file2}" ftp://ftp.testserver.com
+
+#从标准输入获取内容保存到服务器指定的文件中
+curl -u ftpuser:ftppass -T - ftp://ftp.testserver.com/myfile_1.txt
+
+-x 代理访问
+#指定代理的ip/port
+curl -x proxysever.test.com:3128 http://google.com.hk
+
+# 将网站的cookies信息保存到sugarcookies文件中
+curl -D sugarcookies http://localhost/sugarcrm/index.php
+
+# 使用上次保存的cookie信息
+curl -b sugarcookies http://localhost/sugarcrm/index.php
+
+CentOS6 设置静态地址
+修改网卡配置　
+vi /etc/sysconfig/network-scripts/ifcfg-eth0
+DEVICE="eth0"
+BOOTPROTO=none
+NM_CONTROLLED="yes"
+ONBOOT="yes"
+TYPE="Ethernet"
+IPADDR=192.168.0.xx
+NETMASK=255.255.255.0
+NETWORK=192.168.0.0
+GATEWAY=192.168.0.1
+HWADDR=xx:xx:xx:xx:xx:xx
+PREFIX=24
+DEFROUTE=yes
+IPV4_FAILURE_FATAL=yes
+IPV6INIT=no
+NAME="System eth0"
+UUID=5fb06bd0-0bb0-7ffb-45f1-d6edd65f3e03
+LAST_CONNECT=1358664214
+
+nertstat
+-a  ∶将目前系统上所有的连线、监听、Socket 资料都列出来
+-t  ∶列出 tcp 网路封包的资料
+-u  ∶列出 udp 网路封包的资料
+-l  ∶列出目前正在网路监听 (listen) 的服务；
+-p  ∶列出该网路服务的程序 PID
+netsta -tulp
+#State ∶连线状态，建立(ESTABLISED)及监听(LISTEN)；
+
+分割
+split
+    -b 字节
+    -C 字节，保持行的完整性
+    -l 行
+合并
+cat  xxx.a   yyy.b >ccc.c
+
+find  /usr -size +10M -a -size 20M
+-name
+-perm
+-user
+-mtime
+-depth
+-nouser
+-nogroup
+-sieze   10M  +10M  -10M
+-type
+
+-exec ls -l {} \;
+
+[root@student ~]# find  /usr -size +10M -a -size 20M
+/usr/lib64/libLLVM-3.5-mesa.so
+/usr/lib64/libicudata.so.50.1.2
+[root@student ~]# find  /usr -size +10M -a -size 20M -exec ls -l {} \;
+-rwxr-xr-x. 1 root root 20723456 Mar  6  2015 /usr/lib64/libLLVM-3.5-mesa.so
+-rwxr-xr-x. 1 root root 20789896 May 31  2014 /usr/lib64/libicudata.so.50.1.2
+
+-xargs  是为了解决-exec 对匹配到的文本队列太长溢出，建议用xargs占用系统资源小
+  多进程             单进程，分片处理
+
+/etc/profiel    #全局
+~.bash_profile  #对当前用户有效的环境变量
+~.bashrc
+
+ln -sf source_path  target_path
+
+ln -sf /dev/null /tmp/null
+
+cat xx yy >>cc
+
+#!/bin/bash
+#一行一行打印xxx文件
+cat xxx | while read line
+do
+  echo $line
+  echo `date +%Y--%m--%d`
+done
+
+sh -t go_run.sh    #测试脚本语法错误
+
+sh -xv go_run.sh   #单步运行脚本调试
+
+umask
+/etc/profile
+umask 022  (缺省计算 r4 w2 x1)
+022  文件最大6  目录最大7  进行减法运算
+0  -u   rwx
+2  -g   -w
+2  -o   -w
+
+dirname     #目录名字
+basename    #文件、文件夹名字
+dirname /home/mvp/hello
+   /home/mvp
+basename /home/mvp/hello
+   hello
+ls | xargs du -sch |sort -h
+
+du
+  -s  ==total总计
+  -c
+  -h
+  -a  显示每个文件的大小(文件夹及其子目录文件)
+
+du -ach |sort -h
+
+type  cd   #查看命令类型
+file  xxx  #查看文件类型
+stat  xxx  #查看文件详细属性（inode、上下文、权限、时间戳）
+head  -xx
+tail  -xx
+whoami == logname  #显示当前登录用户的名字
+nl
+ -l +1
+ -p
+nl xxx     === cat -n xxx  #输出显示行号
+nl -i 3 xxx #定义每行增加行数字
+nl -p xxx
+
+find /tmp -size +1M | xargs ls -lh
+find /tmp -size +1M -a -size -5M  | xargs ls -lh
+k、M、G
+-10k   --小于
+10M    --等于
++1G    --大于
+-a  与
+-o  或
+
+ssh root@ip  -X   --图形化
+
+mv  -t /data  1.log 2.log test/*  #-t 移动到目标文件夹
+ln  -sf   target  source
+ln        target  source
+
+condition #条件
+internal  #内部
+line     #线
+row      #行
+column   #列
+
+freeware 自由软件
+distributioner 发行商，供应商
+linux distribution Linux发行版本   --slackware
+/etc/resolve.conf  DNS解析
+
+mknod  创建设备字符           主    副
+mknod [OPTION]... NAME TYPE [MAJOR MINOR]
+  c 字符设备，d块设备，p FIFO设备,u非缓冲设备
+#创建字符设备
+mknod /dev/null c  1 3 && chmod a+rw  /dev/null
+
+subnet  子网
+network mask  网络掩码
+A  1-127    255.0.0.0
+B  128-191  255.255.0.0
+C  192-     255.255.255.0
+
+ln [-sf] source target
+
+/etc/rc.local  /etc/rc.d/rc.local
+/etc/passwd
+/etc/fstab
+/etc/group
+/etc/motd   ###进来欢迎语  message of the day
+/etc/issue  ###登录欢迎语
+
+/etc/shadow
+/etc/login.defs  ###login登录默认配置
+/etc/profile
+/etc/securetty  ###定义允许登录的虚拟终端
+/etc/shells
+/etc/inittab
+
+unix    aix/bsd
+linux   （Linux is not unix）
+
+#接口的标准
+posix   操作系统标准
+motif   用户界面标准
+ansic   C语言标准
+
+
+GUN  (gun is not unix) 组织，编写兼容Unix系统的软件
+
+GPL   （gun general public license）  Gnu自由软件许可
+
+LGPL
+
+
+
+
+#磁盘分区使用信息
+df
+  -l  查看本地磁盘（非远程挂载磁盘）
+  -a  显示所有文件系统使用情况
+  -h  1024  （自适应大小）
+  -H  1000
+  -T  磁盘分区类型
+  -t  显示指定分区类型的磁盘
+  -x  不显示指定分区类型的磁盘
+
+
+#统计磁盘文件大小
+du
+  -b   byte
+  -k   KM
+  -m   MB
+  -h   1024
+  -H   1000
+  -s   统计指定信息
+  -c   每个都统计
+  -a   显示总计
+
+
+ls ｜xargs du -sh |sort -h  #当前目录，按文件大小排序，降序
+
+
+MBR分区
+主分区4个，最大支持2TB
+
+fdisk -l
+fdisk /dev/sda
+   m  --help
+   d  delete
+   l  分区id
+   n  add
+   p  打印分区
+   t  改变分区ID
+   w  写退出
+mkfs.ext4/ext3/xfs  /dev/sda1
+
+mount /dev/sda2 /free01
+/etc/fstab
+
+GPT分区（交互、命令模式）
+ 128主分区，最大支持18EB
+
+parted
+  help
+select /dev/sda    #选择磁盘
+mklabel msdos/gpt  #定义磁盘分区类型
+
+unit GB/MB  #定义分区单位
+mkpart
+
+1-2000
+print  #查看分区信息
+mkpart node1 2000 3000  #node1 分区名字  分区起始2000-3000
+quit
+mkfs.ext3/ext4/xfs  /dev/sda3
+mkfs -t ext3/ext4/xfs /dev/sda3
+
+swap分区
+01、简历普通Linux分区
+02、修改分区类型82（默认linux82）
+03、格式化分区   mkswap /dev/sda4
+04、启用交换分区 swapon /dev/sda4

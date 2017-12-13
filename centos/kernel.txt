@@ -1,0 +1,134 @@
+#系统内核参数调整
+sysctl：显示（或设置）系统内核参数 　　
+sysctl -a 显示所有内核参数 　
+sysctl -w 参数名=参数值 　
+sysctl -p 刷新内核加载参数
+
+lsmod 系统内核加载的模块
+
+ulimit [-aHS][-c <core文件上限>][-d <数据节区大小>][-f <文件大小>][-m <内存大小>]
+[-n <文件数目>][-p <缓冲区大小>][-s <堆叠大小>][-t <CPU时间>]
+[-u <程序数目>][-v <虚拟内存大小>]
+
+参数：
+  -a 　显示目前资源限制的设定。
+  -c <core文件上限> 　设定core文件的最大值，单位为区块。
+  -d <数据节区大小> 　程序数据节区的最大值，单位为KB。
+  -f <文件大小> 　shell所能建立的最大文件，单位为区块。
+  -H 　设定资源的硬性限制，也就是管理员所设下的限制。
+  -m <内存大小> 　指定可使用内存的上限，单位为KB。
+  -n <文件数目> 　指定同一时间最多可开启的文件数。
+  -p <缓冲区大小> 　指定管道缓冲区的大小，单位512字节。
+  -s <堆叠大小> 　指定堆叠的上限，单位为KB。
+  -S 　设定资源的弹性限制。
+  -t <CPU时间> 　指定CPU使用时间的上限，单位为秒。
+  -u <程序数目> 　用户最多可开启的程序数目。
+  -v <虚拟内存大小> 　指定可使用的虚拟内存上限，单位为KB。
+
+
+建议直接写到vim /etc/sysctl.conf
+
+#网络参数调整
+net.ipv4.ip_forward = 0
+网络转发
+net.ipv4.tcp_timestamps = 0    #高并发不适合添加
+以一种比重发超时更精确的方法,为了实现更好的性能应该启用这个选项，时间戳在TCP的包头增加12个字节
+net.ipv4.tcp_synack_retries = 2
+syn-ack握手状态重试次数，默认5，遭受syn-flood攻击时改为1或2
+net.ipv4.tcp_syn_retries = 2
+外向syn握手重试次数，默认4
+net.ipv4.tcp_tw_recycle = 1
+默认0，tw快速回收
+net.ipv4.tcp_tw_reuse = 1
+表示开启重用。允许将TIME-WAIT sockets重新用于新的TCP连接，默认为0，表示关闭；
+net.ipv4.tcp_fin_timeout = 30
+表示如果套接字由本端要求关闭，这个参数决定了它保持在FIN-WAIT-2状态的时间。
+net.ipv4.tcp_keepalive_time = 600
+表示当keepalive起用的时候，TCP发送keepalive消息的频度。缺省是2小时，改为20分钟。
+net.ipv4.tcp_keepalive_intvl = 30
+当探测没有确认时，重新发送探测的频度。缺省是75秒
+net.ipv4.tcp_keepalive_probes = 3
+在认定连接失效之前，发送多少个TCP的keepalive探测包。缺省值是9。
+这个值乘以tcp_keepalive_intvl之后决定了，一个连接发送了keepalive之后可以有多少时间没有回应
+
+net.ipv4.ip_local_port_range = 1024  65535
+指定端口范围的一个配置,默认是32768 61000
+net.ipv4.tcp_max_syn_backlog = 65536
+表示SYN队列的长度，默认为1024，加大队列长度为8192，可以容纳更多等待连接的网络连接数
+
+net.ipv4.tcp_max_tw_buckets = 20000
+表示系统同时保持TIME_WAIT套接字的最大数量，如果超过这个数字，TIME_WAIT套接字将立刻被清除并打印警告信息。默认为180000，改为5000。对于Apache、Nginx等服务器，上几行的参数可以很好地减少TIME_WAIT套接字数量，但是对于Squid，效果却不大。此项参数可以控制TIME_WAIT套接字的最大数量，避免Squid服务器被大量的TIME_WAIT套接字拖死
+
+$ /proc/sys/net/ipv4/tcp_max_syn_backlog
+进入SYN包的最大请求队列.默认1024.对重负载服务器,增加该值显然有好处.可调整到2048
+
+
+#TCP KeepAlive默认值
+tcp_keepalive_time = 7200 seconds (2 hours)
+tcp_keepalive_probes = 9
+tcp_keepalive_intvl = 75 seconds
+#高并发建议值
+/proc/sys/net/ipv4/tcp_keepalive_time 1800
+/proc/sys/net/ipv4/tcp_keepalive_intvl 30
+/proc/sys/net/ipv4/tcp_keepalive_probes 3
+
+
+
+#更改linux的最大文件描述符限制
+To Increase the File Descriptor Limit (Linux)Display the current hard limit of your machine.
+
+$ ulimit -aH
+core file size (blocks)       unlimited
+data seg size (kbytes)        unlimited
+file size (blocks)            unlimited
+max locked memory (kbytes)    unlimited
+max memory size (kbytes)      unlimited
+open files                    1024
+pipe size (512 bytes)         8
+stack size (kbytes)           unlimited
+cpu time (seconds)            unlimited
+max user processes            4094
+virtual memory (kbytes)       unlimited
+
+vim /etc/security/limits.conf
+*     soft   nofile  65535
+*     hard   nofile  65535
+
+vim /etc/pam.d/login
+session required /lib/security/pam_limits.so
+
+echo 65535 > /proc/sys/fs/file-max
+#
+Use the ulimit command to set the file descriptor limit to the hard limit specified in/etc/security/limits.conf.
+ulimit -n unlimited
+Restart your system.
+
+
+#编译升级Kernel内核
+
+1。下载2.6.0的内核
+wget http://www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.0.tar.gz
+
+2。在/usr/src目录下解压内核
+tar zvxf /下载的路径/linux-2.6.0.tar.gz
+
+
+3。配置
+
+# make mrproper
+# make menuconfig
+
+make mrproper 是清理代码树的动作，保证源代码是干净的
+
+
+4.编译
+make
+
+5。安装
+make modules_install
+make install
+
+6、boot启动项
+vim /boot/grub/grub.conf
+
+ok，reboot机器

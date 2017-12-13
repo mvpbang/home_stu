@@ -1,0 +1,155 @@
+Markdown 语法说明
+http://www.appinn.com/markdown/
+
+
+00、区块元素
+换行
+两个连续空格   一个以上的空行
+
+标题
+# -
+#h1     #h1#
+##h2    ##h2##
+####.. hn  ###..xx ###...
+
+引用（blockquotes）,引用可以内嵌，标题、列表、代码块
+> xxxx
+>> xxx 嵌套引用
+> ## 这是一个标题
+>
+> 1.   这是第一行列表项。
+> 2.   这是第二行列表项。
+>
+> 给出一些例子代码：
+>
+>     return shell_exec("echo $input | $markdown_script");
+
+列表--无须、有序
+无须
+* + - 都可以作为引用标示
+- xx
+- yy
+
+有序--数字后面跟着英文句点
+1.  Bird
+2.  McHale
+3.  Parish
+
+代码块
+4个空格
+
+分割线
+一行中用三个以上的星号、减号、底线来建立一个分隔线，行内不能有其他东西。你也可以在星号或是减号中间插入空格
+* * *
+***
+*****
+- - -
+
+01、区段元素
+
+链接
+[链接文字](链接url)
+
+[This link](http://example.net/) has no title attribute.
+
+强调--倾斜
+*xxx*
+_xxx_
+*single asterisks*
+_single underscores_
+
+代码
+`xxxx`
+
+图片
+![]
+![Alt text][id]
+![Alt text](/path/to/img.jpg)
+![Alt text](/path/to/img.jpg "Optional title")
+
+02、其他
+
+自动链接--一般链接
+<http://example.com/>    == <a href="http://example.com/">http://example.com/</a>
+
+反斜杠
+转义特殊字符
+\*literal asterisks\*          --转义强调字符
+
+Markdown 语法说明
+http://www.appinn.com/markdown/
+
+
+00、区块元素
+换行
+两个连续空格   一个以上的空行
+
+标题
+# -
+#h1     #h1#
+##h2    ##h2##
+####.. hn  ###..xx ###...
+
+引用（blockquotes）,引用可以内嵌，标题、列表、代码块
+> xxxx
+>> xxx 嵌套引用
+> ## 这是一个标题
+>
+> 1.   这是第一行列表项。
+> 2.   这是第二行列表项。
+>
+> 给出一些例子代码：
+>
+>     return shell_exec("echo $input | $markdown_script");
+
+列表--无须、有序
+无须
+* + - 都可以作为引用标示
+- xx
+- yy
+
+有序--数字后面跟着英文句点
+1.  Bird
+2.  McHale
+3.  Parish
+
+代码块
+4个空格
+
+分割线
+一行中用三个以上的星号、减号、底线来建立一个分隔线，行内不能有其他东西。你也可以在星号或是减号中间插入空格
+* * *
+***
+*****
+- - -
+
+01、区段元素
+
+链接
+[链接文字](链接url)
+
+[This link](http://example.net/) has no title attribute.
+
+强调--倾斜
+*xxx*
+_xxx_
+*single asterisks*
+_single underscores_
+
+代码
+`xxxx`
+
+图片
+![]
+![Alt text][id]
+![Alt text](/path/to/img.jpg)
+![Alt text](/path/to/img.jpg "Optional title")
+
+02、其他
+
+自动链接--一般链接
+<http://example.com/>    == <a href="http://example.com/">http://example.com/</a>
+
+反斜杠
+转义特殊字符
+\*literal asterisks\*          --转义强调字符
